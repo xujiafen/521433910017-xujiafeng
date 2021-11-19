@@ -1,0 +1,208 @@
+class Brain {
+  PVector[] directions;
+  int step = 0;
+  Brain(int size) {
+    directions = new PVector[size];
+    randomize();
+  }
+  void randomize() {
+    for (int i = 0; i< directions.length; i++) {
+      float randomAngle = random(2*PI);
+      directions[i] = PVector.fromAngle(randomAngle);
+    }
+  }
+  Brain clone() {
+    Brain clone = new Brain(directions.length);
+    for (int i = 0; i < directions.length; i++) {
+      clone.directions[i] = directions[i].copy();
+    }
+    return clone;
+  }
+  void mutate() {
+    float mutationRate = 0.1;
+    for (int i =0; i< directions.length; i++) {
+      float rand = random(1);
+      if (rand < mutationRate) {
+        float randomAngle = random(2*PI);
+        directions[i] = PVector.fromAngle(randomAngle);
+      }
+    }
+  }
+}
+class Dot {
+  PVector pos;
+  PVector vel;
+  PVector acc;
+  Brain brain;
+  boolean dead = false;
+  boolean reachedGoal = false;
+  boolean isBest = false;
+  float fitness = 0;
+  Dot() {
+    brain = new Brain(1000);
+    pos = new PVector(width/2, height- 10);
+    vel = new PVector(0, 0);
+    acc = new PVector(0, 0);
+  }
+  void show() {
+    if (isBest) {
+      fill(0, 255, 0);
+      ellipse(pos.x, pos.y, 8, 8);
+    } else {
+      fill(0);
+      ellipse(pos.x, pos.y, 4, 4);
+    }
+  }
+  void move() {
+    if (brain.directions.length > brain.step) {
+      acc = brain.directions[brain.step];
+      brain.step++;
+    } else {
+      dead = true;
+    }
+    vel.add(acc);
+    vel.limit(100);
+    pos.add(vel);
+  }
+  void update() {
+    if (!dead && !reachedGoal) {
+      move();
+      if (pos.x< 2|| pos.y<2 || pos.x>width-2 || pos.y>height -2) {
+        dead = true;
+      } else if (dist(pos.x, pos.y, goal.x, goal.y) < 5) {
+        reachedGoal = true;
+      } else if (pos.x < 400 && pos.y < 420 && pos.x > 0 && pos.y > 400) {
+        dead = true;
+      } else if (pos.x > 200 && pos.x < 620 && pos.y < 220 && pos.y > 200) {
+        dead = true;
+      }
+    }
+  }
+  void calculateFitness() {
+    if (reachedGoal) {
+      fitness = 1.0/16.0 + 10000.0/(float)(brain.step * brain.step);
+    } else {
+      float distanceToGoal = dist(pos.x, pos.y, goal.x, goal.y);
+      fitness = 1.0/(distanceToGoal * distanceToGoal);
+    }
+  }
+  Dot Baby() {
+    Dot baby = new Dot();
+    baby.brain = brain.clone();
+    return baby;
+  }
+}
+class Population {
+  Dot[] dots;
+  float fitnessSum;
+  int gen = 1;
+  int bestDot = 0;
+  int minStep = 1000;
+  Population(int size) {
+    dots = new Dot[size];
+    for (int i = 0; i< size; i++) {
+      dots[i] = new Dot();
+    }
+  }
+  void show() {
+    for (int i = 1; i< dots.length; i++) {
+      dots[i].show();
+    }
+    dots[0].show();
+  }
+  void update() {
+    for (int i = 0; i< dots.length; i++) {
+      if (dots[i].brain.step > minStep) {
+        dots[i].dead = true;
+      } else {
+        dots[i].update();
+      }
+    }
+  }
+  void calculateFitness() {
+    for (int i = 0; i< dots.length; i++) {
+      dots[i].calculateFitness();
+    }
+  }
+  boolean allDotsDead() {
+    for (int i = 0; i< dots.length; i++) {
+      if (!dots[i].dead && !dots[i].reachedGoal) { 
+        return false;
+      }
+    }
+    return true;
+  }
+  void naturalSelection() {
+    Dot[] newDots = new Dot[dots.length];
+    setBestDot();
+    calculateFitnessSum();
+    newDots[0] = dots[bestDot].Baby();
+    newDots[0].isBest = true;
+    for (int i = 1; i< newDots.length; i++) {
+      Dot parent = selectParent();
+      newDots[i] = parent.Baby();
+    }
+    dots = newDots.clone();
+    gen++;
+  }
+  void calculateFitnessSum() {
+    fitnessSum = 0;
+    for (int i = 0; i< dots.length; i++) {
+      fitnessSum += dots[i].fitness;
+    }
+  }
+  Dot selectParent() {
+    float rand = random(fitnessSum);
+    float runningSum = 0;
+    for (int i = 0; i< dots.length; i++) {
+      runningSum+= dots[i].fitness;
+      if (runningSum > rand) {
+        return dots[i];
+      }
+    }
+    return null;
+  }
+  void changeUp() {
+    for (int i = 1; i< dots.length; i++) {
+      dots[i].brain.mutate();
+    }
+  }
+  void setBestDot() {
+    float max = 0;
+    int maxIndex = 0;
+    for (int i = 0; i< dots.length; i++) {
+      if (dots[i].fitness > max) {
+        max = dots[i].fitness;
+        maxIndex = i;
+      }
+    }
+    bestDot = maxIndex;
+    if (dots[bestDot].reachedGoal) {
+      minStep = dots[bestDot].brain.step;
+      println("step:", minStep);
+    }
+  }
+}
+Population test;
+PVector goal  = new PVector(300, 10);
+void setup() {
+  size(600, 600);
+  frameRate(144);
+  test = new Population(1000);
+}
+void draw() { 
+  background(255);
+  fill(255, 0, 0);
+  ellipse(goal.x, goal.y, 10, 10);
+  fill(255, 255, 255);
+  rect(0, 400, 400, 20);
+  rect(200, 200, 400, 20);
+  if (test.allDotsDead()) {
+    test.calculateFitness();
+    test.naturalSelection();
+    test.changeUp();
+  } else {
+    test.update();
+    test.show();
+  }
+}
