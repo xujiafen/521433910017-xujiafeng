@@ -1,0 +1,96 @@
+PImage img;
+boolean flag=false;
+
+void setup(){
+  size(768,576);
+  noStroke();
+  fill(0);
+  rect(20, 20, 60, 40);
+  fill(255);
+  rect(20, 70, 60, 40);
+
+
+  tint(255,105);
+  initiate();
+   
+}
+
+void draw() {
+  noStroke();
+  
+
+  //background(204);
+  if (mouseX>20&&mouseX<80&&mouseY<60&&mouseY>20) {
+    fill(100);
+    rect(20, 20, 60, 40);
+  } else {
+    fill(0);
+    rect(20, 20, 60, 40);
+  }
+  if (mousePressed&&mouseX>20&&mouseX<80&&mouseY<60&&mouseY>20) {
+    fill(255);
+    rect(20, 20, 60, 40);
+    //line(mouseX, mouseY, pmouseX, pmouseY);
+    //rect(100,100,200,200);
+    flag=true;
+  } else if (mouseX>20&&mouseX<80&&mouseY<110&&mouseY>70) {
+    fill(100);
+    rect(20, 70, 60, 40);
+  } else {
+    fill(255);
+    rect(20, 70, 60, 40);
+  }
+  if (mousePressed&&mouseX>20&&mouseX<80&&mouseY<110&&mouseY>70) {
+    fill(255);
+    rect(20, 70, 60, 40);
+    flag= false;
+  }
+
+  if (flag==true) {
+    one();
+  }
+
+  else {
+    two();
+  }
+}
+
+void initiate(){
+  img=loadImage("IMG_3014.JPG");
+}
+
+void one(){
+  
+  background(255);
+  fill(200,0,255);
+  //rect(width/2,height/2,100,200);
+  tint(255,102);
+  image(img,0,0);
+  text("img.width:"+img.width+"img.height:"+img.height,50,50);
+  float l=map(mouseX,0,width,0,1);
+  filter(THRESHOLD,l);
+  fill(0);
+  rect(20, 20, 60, 40);
+  fill(255);
+  rect(20, 70, 60, 40);
+
+}
+void two() {
+  //background(255);
+   //image(img,0,0);
+   img.loadPixels();
+
+  for (int i=0; i<100; i++) {
+    int xx=(int)random(width);
+    int yy=(int)random(height);
+   color c = img.get(xx, yy);
+    noStroke();
+   fill(c);
+
+    ellipse(xx, yy,5, 5);
+     fill(0);
+  rect(20, 20, 60, 40);
+  fill(255);
+  rect(20, 70, 60, 40);
+  }
+}
