@@ -1,0 +1,67 @@
+float theta=25;
+float newtheta=35;
+float c=6;
+float b=8;
+
+void setup() {
+  size(400, 800);
+}
+void draw() {
+  background(#7CCEED);
+  pushMatrix();
+  translate(width/2, height);
+  theta = map(mouseY, 0, height, 0, PI);
+  
+  c=8;
+  branch(140, c);
+  popMatrix();
+  translate(width/2, height);
+  newtheta = map(mouseX, 0, width, 0, PI);
+  newbranch(120, b);
+}
+void branch(float len, float c_) {
+  stroke(#B0F0A2);
+  strokeWeight(c_);
+  line(0, 0, 0, -len);
+  translate(0, -len);
+  len *=0.66;
+  c_*=0.8;
+
+
+  if (len>2) {
+
+    pushMatrix();
+    rotate(theta);
+    branch(len, c_);
+    popMatrix();
+
+
+    pushMatrix();
+    rotate(-theta);
+    branch(len, c_);
+    popMatrix();
+  }
+}
+void newbranch(float newlen, float b_) {
+  stroke(#5A4D1D);
+  strokeWeight(b_);
+  line(0, 0, 0, -newlen);
+  translate(0, -newlen);
+  newlen *=0.66;
+  b_*=0.92;
+
+
+  if (newlen>3) {
+
+    pushMatrix();
+    rotate(newtheta);
+    branch(newlen, b_);
+    popMatrix();
+
+
+    pushMatrix();
+    rotate(-newtheta);
+    branch(newlen, b_);
+    popMatrix();
+  }
+}
